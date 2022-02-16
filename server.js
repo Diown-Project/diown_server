@@ -23,7 +23,7 @@ async function connectDB() {
 // var now = new Date();
 // var utc = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
 // console.log(Date().toString())
-
+console.log('asd')
 console.log(Date.now())
 console.log(new Date(Date.now() + 7 * (60 * 60 * 1000) ))
 
