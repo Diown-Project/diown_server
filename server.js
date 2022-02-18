@@ -10,6 +10,8 @@ const acti = require('./router/acti')
 const sup = require('./router/sup')
 const localDiary = require('./router/diarylocalrouter')
 const Ach = require('./router/ach')
+const mood_router = require('./router/moodemoji.js')
+
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 async function connectDB() {
@@ -23,15 +25,35 @@ async function connectDB() {
 // var now = new Date();
 // var utc = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
 // console.log(Date().toString())
-console.log('asd')
-console.log(Date.now())
-console.log(new Date(Date.now() + 7 * (60 * 60 * 1000) ))
+
+// console.log('asd')
+// console.log(Date.now())
+// var date = new Date(Date.now() + 7 * (60 * 60 * 1000) )
+// date.setDate(date.getDate()+1)
+// console.log(date.toUTCString())
+
+// const maxSpeed = {
+//     car: 300, 
+//     bike: 60, 
+//     motorbike: 200, 
+//     airplane: 1000,
+//     helicopter: 400, 
+//     rocket: 8 * 60 * 60
+// };
+
+// const sortable = Object.entries(maxSpeed)
+//     .sort(([,a],[,b]) => a-b)
+//     .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
+
+// console.log(sortable);
+
 
 app.use('/auth',auth)
 app.use('/activity',acti)
 app.use('/localDiary',localDiary)
 app.use('/support',sup)
 app.use('/achievement',Ach)
+app.use('/mood_router',mood_router)
 
 
 app.get('/test',async (req,res)=>{
