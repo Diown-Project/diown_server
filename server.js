@@ -11,7 +11,7 @@ const sup = require('./router/sup')
 const localDiary = require('./router/diarylocalrouter')
 const Ach = require('./router/ach')
 const mood_router = require('./router/moodemoji.js')
-
+const Putdown = require('./router/allputdownfunc')
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 async function connectDB() {
@@ -54,7 +54,7 @@ app.use('/localDiary',localDiary)
 app.use('/support',sup)
 app.use('/achievement',Ach)
 app.use('/mood_router',mood_router)
-
+app.use('/putdown',Putdown)
 
 app.get('/test',async (req,res)=>{
     const name = await User.find({_id:'61c6eb303968929ed9fecad8'})
