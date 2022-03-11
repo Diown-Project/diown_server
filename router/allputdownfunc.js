@@ -6,7 +6,8 @@ const LocalDiary = require('./../modal/localdiary')
 const {Storage} = require('@google-cloud/storage');
 const Putdown = require('./../modal/putdown')
 const follow = require('../modal/follow')
-
+const user_marker = require('./../modal/usermarker')
+const { add } = require('nodemon/lib/rules')
 app.post('/saveDiary',async (req,res) =>{
     const {token,imageLocation,topic,detail,mood_emoji,mood_detail,activity,like,marker_id,lag,lng,status} = req.body
     var date = new Date(Date.now() + 7 * (60 * 60 * 1000) );
@@ -82,6 +83,29 @@ app.post('/findDiaryInPin',async(req,res)=>{
         res.json({'message':'error'})
     }
    
+})
+
+app.post('/addPin',async(req,res)=>{
+    const {token,pin,marker_id,lag,lng} = req.body
+    try {
+        var id = jwt.verify(token,'password'); 
+        var checkMarker = await user_marker.findOne({user_id:id.id,marker_id:pin,lag,lng})
+        if(checkMarker){
+            res.json({'message':'already have'})
+        }else{
+            var addPin = new user_marker({user_id:id.id,marker_id:pin,lag,lng})
+            await addPin.save()
+            res.json({'message':'success'})
+        }
+    } catch (e) {
+        console.log(e)
+        res.json({'message':'error'})
+    }
+})
+
+app.get('/findAllMarker',async (req,res)=>{
+    var result = await user_marker.find({})
+    res.json(result)
 })
 
 module.exports = app

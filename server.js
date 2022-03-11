@@ -16,11 +16,13 @@ const followRouter = require('./router/followrouter')
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 async function connectDB() {
-    await mongoose.connect('mongodb+srv://noseason:non0814958847@cluster0.4ejho.mongodb.net/SE_project?retryWrites=true&w=majority',
+    await mongoose.connect('mongodb+srv://noseason2543:Non0814958847@cluster0.r1ldq.mongodb.net/myFirstDatabase?retryWrites=true&w=majority',
     { useUnifiedTopology: true , useNewUrlParser: true })
     console.log('DB connect')
     
 }
+// mongodb+srv://noseason2543:Non0814958847@cluster0.r1ldq.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
+//mongodb+srv://noseason:non0814958847@cluster0.4ejho.mongodb.net/SE_project?retryWrites=true&w=majority
 // var c = Date(new Date().toUTCString())
 // console.log(c)
 // var now = new Date();
