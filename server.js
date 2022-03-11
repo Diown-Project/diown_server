@@ -12,14 +12,17 @@ const localDiary = require('./router/diarylocalrouter')
 const Ach = require('./router/ach')
 const mood_router = require('./router/moodemoji.js')
 const Putdown = require('./router/allputdownfunc')
+const followRouter = require('./router/followrouter')
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 async function connectDB() {
-    await mongoose.connect('mongodb+srv://noseason:non0814958847@cluster0.4ejho.mongodb.net/SE_project?retryWrites=true&w=majority',
+    await mongoose.connect('mongodb+srv://noseason2543:Non0814958847@cluster0.r1ldq.mongodb.net/myFirstDatabase?retryWrites=true&w=majority',
     { useUnifiedTopology: true , useNewUrlParser: true })
     console.log('DB connect')
     
 }
+// mongodb+srv://noseason2543:Non0814958847@cluster0.r1ldq.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
+//mongodb+srv://noseason:non0814958847@cluster0.4ejho.mongodb.net/SE_project?retryWrites=true&w=majority
 // var c = Date(new Date().toUTCString())
 // console.log(c)
 // var now = new Date();
@@ -55,6 +58,7 @@ app.use('/support',sup)
 app.use('/achievement',Ach)
 app.use('/mood_router',mood_router)
 app.use('/putdown',Putdown)
+app.use('/follow',followRouter)
 
 app.get('/test',async (req,res)=>{
     const name = await User.find({_id:'61c6eb303968929ed9fecad8'})
