@@ -2,13 +2,11 @@ const express = require('express')
 const app = express()
 const jwt = require('jsonwebtoken')
 const User = require('./../modal/user')
-const LocalDiary = require('./../modal/localdiary')
 const {Storage} = require('@google-cloud/storage');
 const Putdown = require('./../modal/putdown')
 const follow = require('../modal/follow')
 const user_marker = require('./../modal/usermarker')
-const { add } = require('nodemon/lib/rules')
-const e = require('express')
+
 
 app.post('/saveDiary',async (req,res) =>{
     const {token,imageLocation,topic,detail,mood_emoji,mood_detail,activity,like,marker_id,status} = req.body
@@ -118,7 +116,7 @@ app.post('/findAllOwnMarker',async(req,res)=>{
         var id = jwt.verify(token,'password'); 
         var ownMarker = await user_marker.find({user_id:id.id}).lean() // ใช้ในการ convert จาก mongoose เป็น object เพื่อเอาไป add หรือทำงานต่อ
         for(i = 0;i<ownMarker.length;i++){
-            var countNum = await Putdown.count({marker_id:ownMarker[i]['marker_id']
+            var countNum = await Putdown.count({marker_id:ownMarker[i]['_id']
             ,lag:ownMarker[i]['lag'],lng:ownMarker[i]['lng']})
             ownMarker[i]['number_putdown'] = countNum
         }
@@ -148,8 +146,8 @@ app.post('/deletePutdownDiary',async (req,res)=>{
         var result = await Putdown.findOneAndDelete({_id:diary['_id']})
         const bucketName = 'noseason';
         const storage = new Storage({projectId:'images-322604', keyFilename:'./assets/credentials.json'});
-        if(diary['imageLocation'] != null){
-            for(i =0 ;i< diary['imageLocation'].length;i++){
+        if(result['imageLocation'] != null){
+            for(i =0 ;i< result['imageLocation'].length;i++){
                 await storage.bucket(bucketName).file(diary['imageLocation'][i]).delete();
             }
         }
@@ -161,6 +159,30 @@ app.post('/deletePutdownDiary',async (req,res)=>{
 })
 
 app.post('/deletePin',async(req,res)=>{
+    const {id} = req.body
+    try {
+        await user_marker.findOneAndDelete({_id:id})
+        var putdownDiary = await Putdown.find({marker_id:id})
+        const bucketName = 'noseason';
+        const storage = new Storage({projectId:'images-322604', keyFilename:'./assets/credentials.json'});
+        // console.log(putdownDiary[0]['imageLocation'].length)
+        for(i = 0;i < putdownDiary.length;i++){
+            if(putdownDiary[i]['imageLocation'] != null){
+                for(j =0 ;j< putdownDiary[i]['imageLocation'].length;j++){
+                    await storage.bucket(bucketName).file(putdownDiary[i]['imageLocation'][j]).delete();
+                    // console.log(putdownDiary[i]['imageLocation'][j])
+                }
+            }
+        }
+        for(i = 0;i <putdownDiary.length;i++){
+            var c = await Putdown.findByIdAndDelete({_id:putdownDiary[i]['_id']})
+        }
+        res.json({'message':'success'}) 
+    } catch (e) {
+        console.log(e)
+        res.json({'message':'error'})
+    }
+    
 
 })
 
