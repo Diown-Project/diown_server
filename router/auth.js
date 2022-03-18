@@ -44,6 +44,12 @@ app.post('/signin',async(req,res)=>{
     }
 })
 
+app.post('/findUser',async(req,res)=>{
+    const {id} = req.body
+    var user = await User.findOne({_id:id})
+    res.json(user)
+})
+
 app.post('/rememberMe',async (req,res) =>{
     const {token} = req.body
     try {
@@ -106,6 +112,12 @@ app.post('/update',async(req,res)=>{
         res.json({'message':'error'})
         
     }
+})
+
+
+app.get('/allUser',async(req,res)=>{
+    var result = await User.find({})
+    res.json(result)
 })
 
 module.exports = app;
