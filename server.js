@@ -13,6 +13,8 @@ const Ach = require('./router/ach')
 const mood_router = require('./router/moodemoji.js')
 const Putdown = require('./router/allputdownfunc')
 const followRouter = require('./router/followrouter')
+const delay = require('./router/delayrouter')
+
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 async function connectDB() {
@@ -21,6 +23,11 @@ async function connectDB() {
     console.log('DB connect')
     
 }
+// var date = new Date(Date.now() + 7 * (60 * 60 * 1000) );
+// date.setDate(date.getDate()+1);
+// var date2 = new Date(Date.now() + 7 * (60 * 60 * 1000) );
+// date2.setDate(date.getDate()+2);
+// console.log(date < date2)
 // mongodb+srv://noseason2543:Non0814958847@cluster0.r1ldq.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
 //mongodb+srv://noseason:non0814958847@cluster0.4ejho.mongodb.net/SE_project?retryWrites=true&w=majority
 // var c = Date(new Date().toUTCString())
@@ -59,6 +66,7 @@ app.use('/achievement',Ach)
 app.use('/mood_router',mood_router)
 app.use('/putdown',Putdown)
 app.use('/follow',followRouter)
+app.use('/delay',delay)
 
 app.get('/test',async (req,res)=>{
     const name = await User.find({_id:'61c6eb303968929ed9fecad8'})
