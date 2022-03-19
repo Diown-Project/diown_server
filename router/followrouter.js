@@ -85,6 +85,9 @@ app.post('/deleteRequest',async(req,res)=>{
     }
 })
 
+app.post('/checkAllRequest',async(req,res)=>{
+    const {token} = req.body
+})
 
 
 
