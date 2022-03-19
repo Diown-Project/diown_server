@@ -13,6 +13,7 @@ app.post('/saveDiary',async (req,res) =>{
     var date = new Date(Date.now() + 7 * (60 * 60 * 1000) );
     try {
         var id = jwt.verify(token,'password');
+        var user = await User.findOneAndUpdate({_id:id.id},{$inc : {'putdown_num' : 1}})
         var diary = new Putdown({user_id:id.id,imageLocation,topic,detail,mood_emoji,mood_detail,activity,date,like,marker_id,status})
         await diary.save()
         res.json({'message':'success'})
@@ -144,6 +145,7 @@ app.post('/deletePutdownDiary',async (req,res)=>{
     try {
         var id = jwt.verify(token,'password'); 
         var result = await Putdown.findOneAndDelete({_id:diary['_id']})
+        var user = await User.findOneAndUpdate({_id:id.id},{$inc : {'putdown_num' : -1}})
         const bucketName = 'noseason';
         const storage = new Storage({projectId:'images-322604', keyFilename:'./assets/credentials.json'});
         if(result['imageLocation'] != null){
@@ -166,6 +168,9 @@ app.post('/deletePin',async(req,res)=>{
         const bucketName = 'noseason';
         const storage = new Storage({projectId:'images-322604', keyFilename:'./assets/credentials.json'});
         // console.log(putdownDiary[0]['imageLocation'].length)
+        for(i = 0;i < putdownDiary.length;i++){
+            var user = await User.findOneAndUpdate({_id:putdownDiary[i]['user_id']},{$inc : {'putdown_num' : -1}})
+        }
         for(i = 0;i < putdownDiary.length;i++){
             if(putdownDiary[i]['imageLocation'] != null){
                 for(j =0 ;j< putdownDiary[i]['imageLocation'].length;j++){
