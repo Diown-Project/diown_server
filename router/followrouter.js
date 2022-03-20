@@ -14,7 +14,7 @@ app.post('/test',async(req,res)=>{
     res.json({'message':'success'})
 })
 
-app.post('/checkFollow',async(req,res)=>{
+app.post('/checkFollowing',async(req,res)=>{
     const {token,target_id} = req.body
     try { 
         var id = jwt.verify(token,'password'); 
@@ -24,6 +24,33 @@ app.post('/checkFollow',async(req,res)=>{
         }else{
             res.json({'message':'false'})
         }
+    } catch (e) {
+        console.log(e)
+        res.json({'message':'error'})
+    }
+})
+
+app.post('/follower',async(req,res)=>{
+    const {token} = req.body
+    try {
+        var id = jwt.verify(token,'password');  
+        var Follower = await follow.aggregate([{$match:{target:id.id}},{
+            $lookup:{
+                from: 'users',
+                let: { pid: "$following_by" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $eq: ["$_id", { $toObjectId: "$$pid" }]
+                            }
+                        }
+                    }
+                ],
+                as:'user_detail'
+            }
+        }])
+        res.json(Follower)
     } catch (e) {
         console.log(e)
         res.json({'message':'error'})
@@ -87,6 +114,88 @@ app.post('/deleteRequest',async(req,res)=>{
 
 app.post('/checkAllRequest',async(req,res)=>{
     const {token} = req.body
+    try {
+        var id = jwt.verify(token,'password');
+        var allRequest = await followRequest.aggregate([{$match:{target:id.id}},{
+            $lookup:{
+                from: 'users',
+                let: { pid: "$request_by" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $eq: ["$_id", { $toObjectId: "$$pid" }]
+                            }
+                        }
+                    }
+                ],
+                as:'user_detail'
+            }
+        }])
+        res.json(allRequest)
+    } catch (e) {
+        console.log(e)
+        res.json({'message':'error'})
+    }
+    
+})
+
+app.post('/removeRequest',async(req,res)=>{
+    const {token,request_by} = req.body
+    try {
+        var id = jwt.verify(token,'password'); 
+        var del = await followRequest.findOneAndDelete({target:id.id,request_by:request_by})
+        res.json({'message':'success'})
+    } catch (e) {
+        console.log(e)
+        res.json({'message':'error'})
+    }
+    
+})
+
+app.post('/addFollow',async(req,res)=>{
+    const {target,request_by} = req.body
+    try {
+        var id = jwt.verify(target,'password'); 
+        var del1 = await followRequest.findOneAndDelete({target:id.id,request_by:request_by})
+        var addFollow = new follow({target:id.id,following_by:request_by})
+        await addFollow.save()
+        await User.findOneAndUpdate({_id:id.id},{$inc : {'follower_num' : 1}})
+        await User.findOneAndUpdate({_id:request_by},{$inc:{'following_num': 1}})
+        res.json({'message':'success'})
+    } catch (e) {
+        console.log(e)
+        res.json({'message':'error'})
+    }
+})
+
+app.post('/deleteFollower',async(req,res)=>{
+    const {target,following_by} = req.body
+    try {
+        var id = jwt.verify(target,'password'); 
+        var del2 = await follow.findOneAndDelete({target:id.id,following_by:following_by})
+        await User.findOneAndUpdate({_id:id.id},{$inc : {'follower_num' : -1}})
+        await User.findOneAndUpdate({_id:following_by},{$inc:{'following_num': -1}})
+        res.json({'message':'success'})
+    } catch (e) {
+        console.log(e)
+        res.json({'message':'error'})
+    }
+})
+
+app.post('/deleteFollowing',async(req,res)=>{
+    const {token,target} = req.body
+    try {
+        var id = jwt.verify(token,'password');
+        console.log('asd')
+        var del2 = await follow.findOneAndDelete({target:target,following_by:id.id})
+        await User.findOneAndUpdate({_id:id.id},{$inc : {'following_num' : -1}})
+        await User.findOneAndUpdate({_id:target},{$inc:{'follower_num': -1}})
+        res.json({'message':'success'})
+    } catch (e) {
+        console.log(e)
+        res.json({'message':'error'})
+    }
 })
 
 
