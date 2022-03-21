@@ -30,6 +30,33 @@ app.post('/checkFollowing',async(req,res)=>{
     }
 })
 
+app.post('/following',async(req,res)=>{
+    const {token} = req.body
+    try {
+        var id = jwt.verify(token,'password');  
+        var Following = await follow.aggregate([{$match:{following_by:id.id}},{
+            $lookup:{
+                from: 'users',
+                let: { pid: "$target" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $eq: ["$_id", { $toObjectId: "$$pid" }]
+                            }
+                        }
+                    }
+                ],
+                as:'user_detail'
+            }
+        }])
+        res.json(Following)
+    } catch (e) {
+        console.log(e)
+        res.json({'message':'error'})
+    }
+})
+
 app.post('/follower',async(req,res)=>{
     const {token} = req.body
     try {
@@ -187,7 +214,6 @@ app.post('/deleteFollowing',async(req,res)=>{
     const {token,target} = req.body
     try {
         var id = jwt.verify(token,'password');
-        console.log('asd')
         var del2 = await follow.findOneAndDelete({target:target,following_by:id.id})
         await User.findOneAndUpdate({_id:id.id},{$inc : {'following_num' : -1}})
         await User.findOneAndUpdate({_id:target},{$inc:{'follower_num': -1}})
