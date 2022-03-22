@@ -57,7 +57,6 @@ async function connectDB() {
 
 // console.log(sortable);
 
-
 app.use('/auth',auth)
 app.use('/activity',acti)
 app.use('/localDiary',localDiary)
