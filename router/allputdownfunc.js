@@ -6,7 +6,7 @@ const {Storage} = require('@google-cloud/storage');
 const Putdown = require('./../modal/putdown')
 const follow = require('../modal/follow')
 const user_marker = require('./../modal/usermarker')
-
+const Like = require('../modal/like')
 
 app.post('/saveDiary',async (req,res) =>{
     const {token,imageLocation,topic,detail,mood_emoji,mood_detail,activity,like,marker_id,status} = req.body
@@ -146,6 +146,7 @@ app.post('/deletePutdownDiary',async (req,res)=>{
         var id = jwt.verify(token,'password'); 
         var result = await Putdown.findOneAndDelete({_id:diary['_id']})
         var user = await User.findOneAndUpdate({_id:id.id},{$inc : {'putdown_num' : -1}})
+        await Like.deleteMany({'diary_id':diary['_id']})
         const bucketName = 'noseason';
         const storage = new Storage({projectId:'images-322604', keyFilename:'./assets/credentials.json'});
         if(result['imageLocation'] != null){
@@ -170,6 +171,7 @@ app.post('/deletePin',async(req,res)=>{
         // console.log(putdownDiary[0]['imageLocation'].length)
         for(i = 0;i < putdownDiary.length;i++){
             var user = await User.findOneAndUpdate({_id:putdownDiary[i]['user_id']},{$inc : {'putdown_num' : -1}})
+            await Like.deleteMany({'diary_id':putdownDiary[i]['_id']})
         }
         for(i = 0;i < putdownDiary.length;i++){
             if(putdownDiary[i]['imageLocation'] != null){
@@ -189,6 +191,49 @@ app.post('/deletePin',async(req,res)=>{
     }
     
 
+})
+
+app.post('/addLike',async(req,res)=>{
+    const {token,diary_id} = req.body
+    try {
+        var id = jwt.verify(token,'password');
+        var addLike = new Like({diary_id:diary_id,like_by:id.id});
+        await addLike.save()
+        var diary = await Putdown.findOneAndUpdate({'_id':diary_id},{$inc:{'like':1}})
+        res.json({'message':'success'})
+    } catch (e) {
+        console.log(e)
+        res.json({'message':'error'})
+    }
+})
+
+app.post('/removeLike',async(req,res)=>{
+    const {token,diary_id} = req.body
+    try {
+        var id = jwt.verify(token,'password');
+        var del = await Like.findOneAndDelete({diary_id:diary_id,like_by:id.id})
+        var diary = await Putdown.findOneAndUpdate({'_id':diary_id},{$inc:{'like': -1}})
+        res.json({'message':'success'})
+    } catch (e) {
+        console.log(e)
+        res.json({'message':'error'})
+    }
+})
+
+app.post('/checkLike',async(req,res)=>{
+    const {token,diary_id} = req.body
+    try {
+        var id = jwt.verify(token,'password');
+        var check = await Like.find({diary_id:diary_id,like_by:id.id})
+        if(check.length == 0){
+            res.json({'message':'false'})
+        }else{
+            res.json({'message':'true'})
+        }
+    } catch (e) {
+        console.log(e)
+        res.json({'message':'error'})
+    }
 })
 
 module.exports = app
