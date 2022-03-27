@@ -25,6 +25,12 @@ app.post('/allSuccess',async(req,res)=>{
     }
 })
 
+app.post('/allSuccessUser',async(req,res)=>{
+    const {user_id} = req.body
+    const success = await Ach_success.find({user_id:user_id})
+    res.json(success)
+})
+
 app.post('/checkSuccess',async(req,res)=>{
     const{token,index} = req.body
     try {

@@ -7,6 +7,7 @@ const Putdown = require('./../modal/putdown')
 const follow = require('../modal/follow')
 const user_marker = require('./../modal/usermarker')
 const Like = require('../modal/like')
+var mongoose = require('mongoose');
 
 app.post('/saveDiary',async (req,res) =>{
     const {token,imageLocation,topic,detail,mood_emoji,mood_detail,activity,like,marker_id,status} = req.body
@@ -132,7 +133,22 @@ app.post('/findAllOwnMarker',async(req,res)=>{
 app.post('/findDetail',async (req,res)=>{
     try {
         const {id} = req.body
-        var result = await Putdown.findOne({_id:id})
+        var result = await Putdown.aggregate([{$match:{"_id":mongoose.Types.ObjectId(id)}},{
+            $lookup:{
+                from: 'user_markers',
+                let: { pid: "$marker_id" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $eq: ["$_id", { $toObjectId: "$$pid" }]
+                            }
+                        }
+                    }
+                ],
+                as:'marker_detail'
+            }
+        }])
         res.json(result)
     } catch (e) {
         console.log(e)
@@ -234,6 +250,56 @@ app.post('/checkLike',async(req,res)=>{
         console.log(e)
         res.json({'message':'error'})
     }
+})
+
+app.post('/findAllputDown',async (req,res)=>{
+    const {token} = req.body
+    try {
+        var id = jwt.verify(token,'password');
+        var result = await Putdown.aggregate([{$match:{"user_id":id.id}},{
+            $lookup:{
+                from: 'user_markers',
+                let: { pid: "$marker_id" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $eq: ["$_id", { $toObjectId: "$$pid" }]
+                            }
+                        }
+                    }
+                ],
+                as:'marker_detail'
+            }
+        }]).sort({date:-1})
+        res.json(result)
+    } catch (e) {
+        console.log(e)
+        res.json({'message':'error'})
+    }
+    
+})
+
+app.post('/findAllPutdownUser',async(req,res)=>{
+    const {user_id} = req.body
+    var result = await Putdown.aggregate([{$match:{"user_id":user_id
+    ,$or:[{status:'Public'},{status:'Follower'}]}},{
+        $lookup:{
+            from: 'user_markers',
+            let: { pid: "$marker_id" },
+            pipeline: [
+                {
+                    $match: {
+                        $expr: {
+                            $eq: ["$_id", { $toObjectId: "$$pid" }]
+                        }
+                    }
+                }
+            ],
+            as:'marker_detail'
+        }
+    }]).sort({date:-1})
+    res.json(result)
 })
 
 module.exports = app
