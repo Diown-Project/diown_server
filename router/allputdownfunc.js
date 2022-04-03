@@ -437,6 +437,87 @@ app.post('/findAllPutdownUser',async(req,res)=>{
     res.json(result)
 })
 
+app.post('/findLatestPutdown',async(req,res)=>{
+    const {token} = req.body
+    try {
+        var id = jwt.verify(token,'password');
+        var following = await follow.find({following_by:id.id})
+        var c = []
+        for(i =0;i < following.length;i++){
+            c.push(following[i]['target'])
+        }
+        var result1 = await Putdown.aggregate([{$match:{"user_id":{$in:c}
+        ,$or:[{status:'Public'},{status:'Follower'}],deal:'general'}},{
+            $lookup:{
+                from: 'user_markers',
+                let: { pid: "$marker_id" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $eq: ["$_id", { $toObjectId: "$$pid" }]
+                            }
+                        }
+                    }
+                ],
+                as:'marker_detail'
+            }
+        },{$lookup:{
+            from: 'users',
+            let: { pid: "$user_id" },
+            pipeline: [
+                {
+                    $match: {
+                        $expr: {
+                            $eq: ["$_id", { $toObjectId: "$$pid" }]
+                        }
+                    }
+                }
+            ],
+            as:'user_detail'
+        }}]).sort({date:-1})
+        var result2 = await Putdown.aggregate([{$match:{"user_id":{$in:c}
+        ,$or:[{status:'Public'},{status:'Follower'}],deal:'event'}},{
+            $lookup:{
+                from: 'event_markers',
+                let: { pid: "$marker_id" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $eq: ["$_id", { $toObjectId: "$$pid" }]
+                            }
+                        }
+                    }
+                ],
+                as:'marker_detail'
+            }
+        },{$lookup:{
+            from: 'users',
+            let: { pid: "$user_id" },
+            pipeline: [
+                {
+                    $match: {
+                        $expr: {
+                            $eq: ["$_id", { $toObjectId: "$$pid" }]
+                        }
+                    }
+                }
+            ],
+            as:'user_detail'
+        }}]).sort({date:-1})
+        var result = [...result1,...result2]
+        result.sort((a,b)=> b['date'].getTime()-a['date'].getTime())
+        if(result.length > 5){
+            result = result.slice(0,5)
+        }
+        res.json(result)
+    } catch (e) {
+        console.log(e)
+        res.json({'message':'error'})
+    }
+})
+
 
 
 module.exports = app
