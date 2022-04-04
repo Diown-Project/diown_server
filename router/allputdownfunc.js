@@ -147,6 +147,21 @@ app.get('/findEventFinish',async(req,res)=>{
     res.json(result)
 })
 
+app.post('/findEventFromDropdown',async(req,res)=>{
+    const {string} = req.body
+    var date = new Date(Date.now() + 7 * (60 * 60 * 1000) );
+    if(string == 'ongoing'){
+        var result = await event_marker.find({$and:[{end_date:{$gt:date}},{start_date:{$lt:date}}]})
+        res.json(result) 
+    }else if(string == 'complete'){
+        var result = await event_marker.find({end_date:{$lt:date}})
+        res.json(result)
+    }else{
+        var result = await event_marker.find({start_date:{$gt:date}})
+        res.json(result)
+    }
+})
+
 app.get('/findAllMarker',async (req,res)=>{
     var result = await user_marker.find({})
     res.json(result)
@@ -511,6 +526,50 @@ app.post('/findLatestPutdown',async(req,res)=>{
         if(result.length > 5){
             result = result.slice(0,5)
         }
+        res.json(result)
+    } catch (e) {
+        console.log(e)
+        res.json({'message':'error'})
+    }
+})
+
+app.post('/findListDiaryInEvent',async(req,res)=>{
+    const {token,event_id} = req.body
+    try {
+        var id = jwt.verify(token,'password');
+        var result1 = await Putdown.aggregate([{$match:{"user_id": id.id
+        ,deal:'event',marker_id:event_id}},{$lookup:{
+            from: 'users',
+            let: { pid: "$user_id" },
+            pipeline: [
+                {
+                    $match: {
+                        $expr: {
+                            $eq: ["$_id", { $toObjectId: "$$pid" }]
+                        }
+                    }
+                }
+            ],
+            as:'user_detail'
+        }}]).sort({date:-1})
+        var result2 = await Putdown.aggregate([{$match:{'user_id':{$ne:id.id},deal:'event',marker_id:event_id,
+        $or:[{status:'Public'},{status:'Follower'}]}},
+        {$lookup:{
+            from: 'users',
+            let: { pid: "$user_id" },
+            pipeline: [
+                {
+                    $match: {
+                        $expr: {
+                            $eq: ["$_id", { $toObjectId: "$$pid" }]
+                        }
+                    }
+                }
+            ],
+            as:'user_detail'
+        }}]).sort({date:-1})
+        var result =  [...result1,...result2]
+        result.sort((a,b)=> b['date'].getTime()-a['date'].getTime())
         res.json(result)
     } catch (e) {
         console.log(e)
