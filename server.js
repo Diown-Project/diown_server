@@ -24,15 +24,9 @@ async function connectDB() {
     
 }
 // var date = new Date(Date.now() + 7 * (60 * 60 * 1000) );
-// date.setDate(date.getDate()-2);
+// date.setDate(date.getDate()+1);
 // var date2 = new Date(Date.now() + 7 * (60 * 60 * 1000) );
-// date2.setDate(date2.getDate()+5);
-// console.log(date.getTime())
-// console.log(date2.getTime())
-
-// console.log(date)
-// console.log(date2)
-
+// date2.setDate(date.getDate()+2);
 // console.log(date < date2)
 // mongodb+srv://noseason2543:Non0814958847@cluster0.r1ldq.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
 //mongodb+srv://noseason:non0814958847@cluster0.4ejho.mongodb.net/SE_project?retryWrites=true&w=majority

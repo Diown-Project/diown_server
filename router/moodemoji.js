@@ -6,6 +6,7 @@ const LocalDiary = require('./../modal/localdiary')
 
 app.post('/findAll',async (req,res)=>{
     const {token,period} = req.body
+    console.log(period)
     var moodList = [
         {'emoji': '😄', 'mood': 'Happy'},
         {'emoji': '😭', 'mood': 'Sadly'},
@@ -45,6 +46,8 @@ app.post('/findAll',async (req,res)=>{
         for(i =0;i<sor.length;i++){
             sortable[sor[i][0]] = sor[i][1]
         }
+
+        console.log(sortable)
         var emo = []
         if(Object.keys(sortable).length > 7){
             var c = 0;
