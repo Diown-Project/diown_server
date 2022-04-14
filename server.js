@@ -14,7 +14,9 @@ const mood_router = require('./router/moodemoji.js')
 const Putdown = require('./router/allputdownfunc')
 const followRouter = require('./router/followrouter')
 const delay = require('./router/delayrouter')
+const cors = require('cors')
 
+app.use(cors())
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 async function connectDB() {
@@ -81,7 +83,7 @@ app.get('/test',async (req,res)=>{
 app.get('/',(req,res)=>{res.send('Hello world')})
 
 connectDB()
-app.listen(process.env.PORT || 3000,()=>console.log('sever test port 3000 already start.'))
+app.listen(process.env.PORT || 3001,()=>console.log('sever test port 3001 already start.'))
 
 // const bucketName = 'noseason';
 // const filePath = '../SE_app_project/diown/images/non.jpg'
