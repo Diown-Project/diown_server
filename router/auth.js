@@ -5,6 +5,15 @@ const jwt = require("jsonwebtoken");
 const User = require("./../modal/user");
 const { Storage } = require("@google-cloud/storage");
 const admin = require("./../modal/admin");
+const LocalDiary = require("./../modal/localdiary");
+const Ach_success = require("../modal/ach_success");
+const Activity = require("./../modal/activity");
+const Putdown = require("./../modal/putdown");
+const Like = require("../modal/like");
+const delay = require("./../modal/delaytime");
+const follow = require("./../modal/follow");
+const followRequest = require("./../modal/followrequest");
+const user_marker = require("./../modal/usermarker");
 
 app.post("/signup", async (req, res) => {
   const { username, email, password } = req.body;
@@ -177,6 +186,115 @@ app.post("/adminLogin", async (req, res) => {
 app.get("/allUser", async (req, res) => {
   var result = await User.find({});
   res.json(result);
+});
+
+app.post("/deleteUser", async (req, res) => {
+  const { id } = req.body;
+  const bucketName = "noseason";
+  const storage = new Storage({
+    projectId: "images-322604",
+    keyFilename: "./assets/credentials.json",
+  });
+  const user = await User.findOne({ _id: id });
+  if (user.profile_image === "person.png") {
+    console.log("person");
+  } else {
+    console.log("not person");
+    await storage.bucket(bucketName).file(user.profile_image).delete();
+  }
+  const findLocalDiary = await LocalDiary.find({ user_id: id });
+  for (i = 0; i < findLocalDiary.length; i++) {
+    if (findLocalDiary[i]["imageLocation"] != null) {
+      for (j = 0; j < findLocalDiary[i]["imageLocation"].length; j++) {
+        await storage
+          .bucket(bucketName)
+          .file(findLocalDiary[i]["imageLocation"][j])
+          .delete();
+      }
+    }
+  }
+  await LocalDiary.deleteMany({ user_id: id });
+  await Activity.deleteMany({ user: user._id });
+  await Ach_success.deleteMany({ user_id: id });
+
+  const findAllPutdown = await Putdown.find({ user_id: id });
+  for (i = 0; i < findAllPutdown.length; i++) {
+    await Like.deleteMany({ diary_id: findAllPutdown[i]._id });
+    const updateUser = await User.findOneAndUpdate(
+      { _id: findAllPutdown[i]["user_id"] },
+      { $inc: { putdown_num: -1 } }
+    );
+  }
+  for (i = 0; i < findAllPutdown.length; i++) {
+    if (findAllPutdown[i]["imageLocation"] != null) {
+      for (j = 0; j < findAllPutdown[i]["imageLocation"].length; j++) {
+        await storage
+          .bucket(bucketName)
+          .file(findAllPutdown[i]["imageLocation"][j])
+          .delete();
+      }
+    }
+  }
+  await Putdown.deleteMany({ user_id: id });
+  const findDelay = await delay.findOneAndDelete({ user_id: id });
+  await followRequest.deleteMany({
+    $or: [{ target: id }, { request_by: id }],
+  });
+
+  const findFollowing = await follow.find({ following_by: id });
+
+  for (i = 0; i < findFollowing.length; i++) {
+    const FollowingUser = await User.findOneAndUpdate(
+      {
+        _id: findFollowing[i].target,
+      },
+      { $inc: { follower_num: -1 } }
+    );
+  }
+  await follow.deleteMany({ following_by: id });
+
+  const findFollower = await follow.find({ target: id });
+  for (i = 0; i < findFollower.length; i++) {
+    const FollowerUser = await User.findOneAndUpdate(
+      {
+        _id: findFollower[i].following_by,
+      },
+      { $inc: { following_num: -1 } }
+    );
+  }
+  await follow.deleteMany({ target: id });
+
+  const findAllMarker = await user_marker.find({ user_id: id });
+  for (i = 0; i < findAllMarker.length; i++) {
+    const putdownDiary = await Putdown.find({
+      marker_id: findAllMarker[i]._id,
+    });
+    for (i = 0; i < putdownDiary.length; i++) {
+      const UpdateUser = await User.findOneAndUpdate(
+        { _id: putdownDiary[i]["user_id"] },
+        { $inc: { putdown_num: -1 } }
+      );
+      await Like.deleteMany({ diary_id: putdownDiary[i]["_id"] });
+      for (i = 0; i < putdownDiary.length; i++) {
+        if (putdownDiary[i]["imageLocation"] != null) {
+          for (j = 0; j < putdownDiary[i]["imageLocation"].length; j++) {
+            await storage
+              .bucket(bucketName)
+              .file(putdownDiary[i]["imageLocation"][j])
+              .delete();
+          }
+        }
+      }
+      for (i = 0; i < putdownDiary.length; i++) {
+        var c = await Putdown.findByIdAndDelete({
+          _id: putdownDiary[i]["_id"],
+        });
+      }
+    }
+  }
+  await user_marker.deleteMany({ user_id: id });
+  const delUser = await User.findOneAndDelete({ _id: id });
+  res.json({ message: "success" });
 });
 
 module.exports = app;
