@@ -27,7 +27,7 @@ async function connectDB() {
   console.log("DB connect");
 }
 // var date = new Date(Date.now() + 7 * (60 * 60 * 1000));
-// date.setDate(date.getDate() - 35);
+// date.setDate(date.getDate());
 // var date2 = new Date(Date.now() + 7 * (60 * 60 * 1000));
 // date2.setDate(date2.getDate() - 30);
 // console.log(date.getTime());
@@ -86,7 +86,7 @@ app.get("/", (req, res) => {
 });
 
 connectDB();
-app.listen(process.env.PORT || 3001, () =>
+app.listen(process.env.PORT || 3000, () =>
   console.log("sever test port 3001 already start.")
 );
 
