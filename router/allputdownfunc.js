@@ -171,8 +171,16 @@ app.post("/addPin", async (req, res) => {
 });
 
 app.post("/addEventMarker", async (req, res) => {
-  const { marker_id, imageLocation, lag, lng, start_date, end_date, detail } =
-    req.body;
+  const {
+    marker_id,
+    imageLocation,
+    lag,
+    lng,
+    start_date,
+    end_date,
+    detail,
+    topic,
+  } = req.body;
   var date = new Date(Date.now() + 7 * (60 * 60 * 1000));
   console.log(start_date);
   console.log(end_date);
@@ -215,6 +223,7 @@ app.post("/addEventMarker", async (req, res) => {
       start_date: start_date,
       end_date: end_date,
       detail: detail,
+      topic: topic,
     });
     await addEventMaker.save();
     res.json({ message: "success" });
@@ -828,6 +837,12 @@ app.post("/deleteImageLocal", async (req, res) => {
       res.json({ message: "success" });
     }
   });
+});
+
+app.post("/testTime", async (req, res) => {
+  const { start_date, end_date } = req.body;
+  console.log(start_date, end_date);
+  res.json({ message: "success" });
 });
 
 module.exports = app;
