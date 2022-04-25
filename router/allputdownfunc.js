@@ -182,8 +182,8 @@ app.post("/addEventMarker", async (req, res) => {
     topic,
   } = req.body;
   var date = new Date(Date.now() + 7 * (60 * 60 * 1000));
-  console.log(start_date);
-  console.log(end_date);
+  // console.log(start_date);
+  // console.log(end_date);
   var check_date = await event_marker.find({
     lag: lag,
     lng: lng,
@@ -230,8 +230,82 @@ app.post("/addEventMarker", async (req, res) => {
   }
 });
 
+app.post("/upDateEvent", async (req, res) => {
+  const { id, imageName, markerName, topic, detail, start_date, end_date } =
+    req.body;
+  const findThisEvent = await event_marker.findOne({ _id: id });
+  const findCheck = await event_marker.find({
+    _id: { $ne: id },
+    lag: findThisEvent.lag,
+    lng: findThisEvent.lng,
+    $or: [
+      {
+        $and: [
+          { start_date: { $gt: start_date } },
+          { end_date: { $gt: end_date } },
+          { start_date: { $lt: end_date } },
+        ],
+      },
+      {
+        $and: [
+          { start_date: { $lt: start_date } },
+          { end_date: { $gt: end_date } },
+        ],
+      },
+      {
+        $and: [
+          { start_date: { $lt: start_date } },
+          { end_date: { $lt: end_date } },
+          { end_date: { $gt: start_date } },
+        ],
+      },
+      { start_date: start_date },
+      { end_date: end_date },
+    ],
+  });
+  if (findCheck.length != 0) {
+    res.json({ message: "this location have pin now." });
+  } else {
+    if (imageName == "") {
+      const upDate = await event_marker.findOneAndUpdate(
+        { _id: id },
+        { marker_id: markerName, topic, detail, start_date, end_date }
+      );
+      res.json({ message: "success" });
+    } else {
+      const bucketName = "noseason";
+      const storage = new Storage({
+        projectId: "images-322604",
+        keyFilename: "./assets/credentials.json",
+      });
+      await storage
+        .bucket(bucketName)
+        .file(findThisEvent.imageLocation)
+        .delete();
+      const upDate = await event_marker.findOneAndUpdate(
+        { _id: id },
+        {
+          imageLocation: imageName,
+          marker_id: markerName,
+          topic,
+          detail,
+          start_date,
+          end_date,
+        }
+      );
+      res.json({ message: "success" });
+    }
+  }
+});
+
 app.get("/findAllEvent", async (req, res) => {
   const result = await event_marker.find({});
+  res.json(result);
+});
+
+app.post("/findEventDetail", async (req, res) => {
+  const { id } = req.body;
+  const result = await event_marker.findOne({ _id: id });
   res.json(result);
 });
 
@@ -449,13 +523,14 @@ app.post("/deletePin", async (req, res) => {
 app.post("/deleteEventPin", async (req, res) => {
   const { id } = req.body;
   try {
-    await event_marker.findOneAndDelete({ _id: id });
+    const event_eiei = await event_marker.findOneAndDelete({ _id: id });
     var putdownDiary = await Putdown.find({ marker_id: id });
     const bucketName = "noseason";
     const storage = new Storage({
       projectId: "images-322604",
       keyFilename: "./assets/credentials.json",
     });
+    await storage.bucket(bucketName).file(event_eiei.imageLocation).delete();
     // console.log(putdownDiary[0]['imageLocation'].length)
     for (i = 0; i < putdownDiary.length; i++) {
       var user = await User.findOneAndUpdate(
