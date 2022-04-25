@@ -86,7 +86,7 @@ app.get("/", (req, res) => {
 });
 
 connectDB();
-app.listen(process.env.PORT || 3000, () =>
+app.listen(process.env.PORT || 3001, () =>
   console.log("sever test port 3001 already start.")
 );
 
