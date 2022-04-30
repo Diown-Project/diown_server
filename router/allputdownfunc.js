@@ -884,7 +884,7 @@ app.post("/findListDiaryInEvent", async (req, res) => {
 app.post("/testAddImage", upload.single("file"), async (req, res) => {
   console.log(req.file);
   const bucketName = "noseason";
-  const filePath = "../server_project/images/" + req.file.originalname;
+  const filePath = "images/" + req.file.originalname;
   const storage = new Storage({
     projectId: "images-322604",
     keyFilename: "./assets/credentials.json",
