@@ -21,7 +21,7 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 async function connectDB() {
   await mongoose.connect(
-    "mongodb+srv://noseason2543:Non0814958847@cluster0.r1ldq.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
+    "mongodb+srv://<Username>:<Password>@cluster0.r1ldq.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
     { useUnifiedTopology: true, useNewUrlParser: true }
   );
   console.log("DB connect");
